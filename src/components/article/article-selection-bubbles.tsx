@@ -2,8 +2,8 @@ import { CancelButton, Flex, Input, styled, Button } from 'bricks-of-sand';
 import * as React from 'react';
 import { useDispatch } from 'redux-react-hook';
 
-import { usePopularArticles } from '../../store';
-import { Article, startLoadingArticles } from '../../store/reducers';
+import { usePopularArticles, useUserRecentArticles } from '../../store';
+import { Article, startLoadingArticles, startLoadingUserDetails } from '../../store/reducers';
 import { Currency } from '../currency';
 import { ArticleValidator } from './validator';
 
@@ -24,13 +24,28 @@ interface Props {
 
 const ARTICLE_BUBBLE_LIMIT = 10;
 export const ArticleSelectionBubbles = (props: Props) => {
-  const items = usePopularArticles();
   const dispatch = useDispatch();
   const [query, setQuery] = React.useState('');
 
+  const allItemsSortedByPopularity = usePopularArticles();
+  const recentItemsPickedByUser = useUserRecentArticles(props.userId);
+  let itemsToShow = [];
+
+  if (!query) {
+    itemsToShow = recentItemsPickedByUser;
+  } else {
+    itemsToShow = allItemsSortedByPopularity.filter((item) =>
+      item.name.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+  itemsToShow.slice(0, ARTICLE_BUBBLE_LIMIT);
+
   React.useEffect(() => {
     startLoadingArticles(dispatch, true);
-  }, []);
+  }, [dispatch]);
+  React.useEffect(() => {
+    startLoadingUserDetails(dispatch, props.userId);
+  }, [dispatch, props.userId]);
 
   return (
     <div>
@@ -39,7 +54,7 @@ export const ArticleSelectionBubbles = (props: Props) => {
         <CancelButton onClick={props.onCancel} />
       </InputSection>
       <Flex margin="2rem 0 0 0" flexWrap="wrap" justifyContent="center">
-        {items
+        {itemsToShow
           .filter(
             item =>
               !query || item.name.toLowerCase().includes(query.toLowerCase())
