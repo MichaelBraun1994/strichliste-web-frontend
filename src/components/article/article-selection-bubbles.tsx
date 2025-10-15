@@ -22,23 +22,26 @@ interface Props {
   onCancel(): void;
 }
 
-const ARTICLE_BUBBLE_LIMIT = 10;
+// Shows up to RECENT_ARTICLES_TO_SHOW recent articles, fills up to TOTAL_ARTICLE_LIMIT with popular articles
+function combineRecentAndPopularArticles(recentArticles: Article[], popularArticles: Article[], TOTAL_ARTICLE_LIMIT: number): Article[] {
+  const RECENT_ARTICLES_TO_SHOW = 5
+
+  const combination: Article[] = [];
+  combination.push(...recentArticles.slice(0, RECENT_ARTICLES_TO_SHOW));
+
+  for (const popularArticle of popularArticles) {
+    if (!combination.some((recentArticle: Article) => recentArticle.id === popularArticle.id)) {
+      combination.push(popularArticle);
+    }
+    if (combination.length === TOTAL_ARTICLE_LIMIT) break;
+  }
+
+  return combination;
+}
+
 export const ArticleSelectionBubbles = (props: Props) => {
   const dispatch = useDispatch();
   const [query, setQuery] = React.useState('');
-
-  const allItemsSortedByPopularity = usePopularArticles();
-  const recentItemsPickedByUser = useUserRecentArticles(props.userId);
-  let itemsToShow = [];
-
-  if (!query) {
-    itemsToShow = recentItemsPickedByUser;
-  } else {
-    itemsToShow = allItemsSortedByPopularity.filter((item) =>
-      item.name.toLowerCase().includes(query.toLowerCase())
-    );
-  }
-  itemsToShow.slice(0, ARTICLE_BUBBLE_LIMIT);
 
   React.useEffect(() => {
     startLoadingArticles(dispatch, true);
@@ -46,6 +49,11 @@ export const ArticleSelectionBubbles = (props: Props) => {
   React.useEffect(() => {
     startLoadingUserDetails(dispatch, props.userId);
   }, [dispatch, props.userId]);
+
+  const ARTICLE_BUBBLE_LIMIT = 10;
+  const allItemsSortedByPopularity = usePopularArticles();
+  const recentItemsPickedByUser = useUserRecentArticles(props.userId);
+  let itemsToShow = combineRecentAndPopularArticles(recentItemsPickedByUser, allItemsSortedByPopularity, ARTICLE_BUBBLE_LIMIT);
 
   return (
     <div>
