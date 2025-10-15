@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { FormattedNumber } from 'react-intl';
+import { useSettings } from '../../store';
 
 interface Props {
   value: number;
@@ -7,10 +8,13 @@ interface Props {
 }
 
 export function Currency({ value, hidePlusSign }: Props): JSX.Element {
+  const settings = useSettings();
+  const customCurrencySign = settings.i18n.currency.symbol;
   return (
     <>
       {value > 0 && !hidePlusSign ? '+' : ''}
-      <FormattedNumber currency="EUR" value={value / 100} style="currency" />
+      <FormattedNumber value={value / 100} />
+      {customCurrencySign}
     </>
   );
 }
