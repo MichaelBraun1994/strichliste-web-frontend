@@ -56,7 +56,15 @@ export const ArticleSelectionBubbles = (props: Props) => {
   const recentActiveItemsPickedByUser = useUserRecentArticles(props.userId)
     .filter((article): article is Article => article.isActive);
 
-  let itemsToShow = combineRecentAndPopularArticles(recentActiveItemsPickedByUser, allActiveItemsSortedByPopularity, ARTICLE_BUBBLE_LIMIT);
+  let itemsToShow = []
+  if (!query) {
+    itemsToShow = combineRecentAndPopularArticles(recentActiveItemsPickedByUser, allActiveItemsSortedByPopularity, ARTICLE_BUBBLE_LIMIT);
+  } else {
+    itemsToShow = allActiveItemsSortedByPopularity.filter((item) =>
+      item.name.toLowerCase().includes(query.toLowerCase())
+    );
+    itemsToShow.slice(0, ARTICLE_BUBBLE_LIMIT);
+  }
 
   return (
     <div>
